@@ -25,8 +25,44 @@ public class PrescriptionRepository : IPrescriptionRepository
     {
         using var con = new SqlConnection(_connectionString);
         con.Open();
-        if (!patientExist(con, newPrescription.Patient)) return 0;
-        return 0;
+        if (!patientExist(con, newPrescription.Patient)) createNewPatient(con, newPrescription.Patient);
+        if (newPrescription.Medicaments.Count > 10) return 0;
+        if (newPrescription.DueDate >= newPrescription.Date) return 0;
+        foreach (var med in newPrescription.Medicaments) if (!medicamentExist(con, med)) return 0;
+
+        string query =
+            "INSERT INTO Prescription (IdPrescription, Date, DueDate, IdPatient, IdDoctor) VALUES (@IdPrescription, @Date, @DueDate, @IdPatient, @IdDoctor)";
+        var cmd = new SqlCommand();
+        cmd.CommandText = query;
+        cmd.Parameters.AddWithValue("@IdPrescription", new Random().Next(0, 10000));
+        cmd.Parameters.AddWithValue("@Date", newPrescription.Date);
+        cmd.Parameters.AddWithValue("@DueDate", newPrescription.DueDate);
+        cmd.Parameters.AddWithValue("@IdPatient", newPrescription.Patient.IdPatient);
+        cmd.Parameters.AddWithValue("@IdDoctor", newPrescription.Doctor.IdDoctor);
+        return cmd.ExecuteNonQuery();
+    }
+
+    private bool medicamentExist(SqlConnection con, Medicament med)
+    {
+        String query = "SELECT COUNT(*) FROM Medicament WHERE IdMedicament = @IdMedicament";
+        var cmd = new SqlCommand();
+        cmd.Connection = con;
+        cmd.CommandText = query;
+        cmd.Parameters.AddWithValue("@IdMedicament", med.IdMedicament);
+        return cmd.ExecuteNonQuery() > 0;
+    }
+
+    private void createNewPatient(SqlConnection con, Patient patient)
+    {
+        String query = "INSERT INTO Patient (IdPatient, FirstName, LastName, Birthdate) VALUES (@IdPatient, @FirstName, @LastName, @Birthdate)";
+        var cmd = new SqlCommand();
+        cmd.Connection = con;
+        cmd.CommandText = query;
+        cmd.Parameters.AddWithValue("@IdPatient", patient.IdPatient);
+        cmd.Parameters.AddWithValue("@FirstName", patient.FirstName);
+        cmd.Parameters.AddWithValue("@LastName", patient.LastName);
+        cmd.Parameters.AddWithValue("@Birthdate", patient.Birthdate);
+        cmd.ExecuteNonQuery();
     }
 
     private bool patientExist(SqlConnection con, Patient patient)

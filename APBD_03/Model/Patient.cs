@@ -10,5 +10,5 @@ public class Patient
 
     [Required, MaxLength(100)] public string LastName { get; set; }
 
-    [Required] public DateTime BirthDate { get; set; }
+    [Required] public DateTime Birthdate { get; set; }
 }
