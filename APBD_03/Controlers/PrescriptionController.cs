@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace APBD_03.Controlers;
 
 
-[Route("api/[controller]")]
 [ApiController]
 public class PrescriptionController : ControllerBase
 {
@@ -23,10 +22,19 @@ public class PrescriptionController : ControllerBase
     /// <returns>201 Created</returns>
     /// <returns>400 Not Created</returns>
     [HttpPost]
+    [Route("api/prescription")]
     public IActionResult CreateAnimal(NewPrescriptionRequest newPrescription)
     {
         var affectedCount = _prescriptionService.createPerscription(newPrescription);
         if (affectedCount <= 0) return StatusCode(StatusCodes.Status400BadRequest);
         return StatusCode(StatusCodes.Status201Created);
     }
+
+    [HttpGet("api/{id:int}")]
+    public PatientInfo GetPatientInfo(int id)
+    {
+        
+    }
+    
+
 }

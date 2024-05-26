@@ -74,4 +74,27 @@ public class PrescriptionRepository : IPrescriptionRepository
         cmd.Parameters.AddWithValue("@IdPatient", patient.IdPatient);
         return cmd.ExecuteNonQuery() > 0;
     }
+    
+    private bool patientExist(SqlConnection con, int id)
+    {
+        String query = "SELECT COUNT(*) FROM Patient WHERE IdPatient = @IdPatient";
+        var cmd = new SqlCommand();
+        cmd.Connection = con;
+        cmd.CommandText = query;
+        cmd.Parameters.AddWithValue("@IdPatient", id);
+        return cmd.ExecuteNonQuery() > 0;
+    }
+
+    private void getPatientById(SqlConnection con, int id)
+    {
+        
+    }
+    
+    public PatientInfo GetPatientInfo(int id)
+    {
+        using var con = new SqlConnection(_connectionString);
+        con.Open();
+        if (!patientExist(con, id)) return null;
+        
+    }
 }

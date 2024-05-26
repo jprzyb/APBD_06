@@ -16,4 +16,9 @@ public class PrescriptionService : IPrescriptionService
     {
         return _perscriptionRepository.CreatePrescription(newPrescription);
     }
+
+    public PatientInfo GetPatientInfo(int id)
+    {
+        return _perscriptionRepository.GetPatientInfo(id);
+    }
 }
