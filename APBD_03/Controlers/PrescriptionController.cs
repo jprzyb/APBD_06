@@ -30,10 +30,16 @@ public class PrescriptionController : ControllerBase
         return StatusCode(StatusCodes.Status201Created);
     }
 
+    /// <summary>
+    /// Endpoint used to create presription.
+    /// </summary>
+    /// <param name="Prescription">New prescription data</param>
+    /// <returns>201 Created</returns>
+    /// <returns>400 Not Created</returns>
     [HttpGet("api/{id:int}")]
     public PatientInfo GetPatientInfo(int id)
     {
-        
+        return _prescriptionService.GetPatientInfo(id);
     }
     
 

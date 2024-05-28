@@ -85,9 +85,23 @@ public class PrescriptionRepository : IPrescriptionRepository
         return cmd.ExecuteNonQuery() > 0;
     }
 
-    private void getPatientById(SqlConnection con, int id)
+    private Patient getPatientById(SqlConnection con, int id)
     {
-        
+        String query = "SELECT COUNT(*) FROM Patient WHERE IdPatient = @IdPatient";
+        var cmd = new SqlCommand();
+        cmd.Connection = con;
+        cmd.CommandText = query;
+        cmd.Parameters.AddWithValue("@IdPatient", id);
+        var dr = cmd.ExecuteReader();
+        if (!dr.Read()) return null;
+        var patient = new Patient()
+        {
+            IdPatient = (int)dr["IdPatient"],
+            Birthdate = (DateTime)dr["BirthDate"],
+            FirstName = (string)dr["FirstName"],
+            LastName = (string)dr["LastName"]
+        };
+        return patient;
     }
     
     public PatientInfo GetPatientInfo(int id)
@@ -96,5 +110,104 @@ public class PrescriptionRepository : IPrescriptionRepository
         con.Open();
         if (!patientExist(con, id)) return null;
         
+        PatientInfo result = new PatientInfo();
+        result.Patient = getPatientById(con, id);
+        
+        
+        return result;
+    }
+
+    private List<PrescriptionsForPatientInfoRequest> getPrescriptionsForPatient(SqlConnection con, int IdPatient)
+    {
+        List<PrescriptionsForPatientInfoRequest> results = new List<PrescriptionsForPatientInfoRequest>();
+        String query = "SELECT * FROM Prescription WHERE IdPatient = @IdPatient";
+        var cmd = new SqlCommand();
+        cmd.Connection = con;
+        cmd.CommandText = query;
+        cmd.Parameters.AddWithValue("@IdPatient", IdPatient);
+        var dr = cmd.ExecuteReader();
+        
+        while (dr.Read())
+        {
+            var prescription = new Prescription()
+            {
+                IdPresription = (int)dr["IdPrescription"],
+                Date = (DateTime)dr["Date"],
+                DueDate = (DateTime)dr["DueDate"],
+                IdPatient = (int)dr["IdPatient"],
+                IdDoctor = (int)dr["IdDoctor"]
+            };
+
+            
+            var grade = new PrescriptionsForPatientInfoRequest()
+            {
+                IdPerscription = prescription.IdPresription,
+                Date = prescription.Date,
+                DueDate = prescription.DueDate,
+                Medicaments = getAllMedicamentsForPrescription(con, prescription.IdPresription),
+                IdDoctor = prescription.IdDoctor,
+                DoctorFirstName = getDoctorById(con, prescription.IdDoctor).FirstName
+            };
+            results.Add(grade);
+        }
+        
+        return results;
+    }
+
+    private List<Medicament> getAllMedicamentsForPrescription(SqlConnection con, int IdPresription)
+    {
+        List<Medicament> results = new List<Medicament>();
+
+        String query = "SELECT * FROM Prescription_Medicament WHERE IdPresription = @IdPresription";
+        var cmd = new SqlCommand();
+        cmd.Connection = con;
+        cmd.CommandText = query;
+        cmd.Parameters.AddWithValue("@IdPatient", IdPresription);
+        var dr = cmd.ExecuteReader();
+        
+        var grade = new Prescription_Medicament()
+        {
+            IdMedicament = (int)dr["IdMedicament"],
+            IdPrescription = (int)dr["IdPrescription"],
+            Dose = (int)dr["Dose"],
+            Details = (string)dr["Details"]
+        };
+        
+        var cmdd = new SqlCommand();
+        cmdd.Connection = con;
+        cmdd.CommandText = "SELECT * FROM Medicament WHERE IdMedicament = @IdMedicament";
+        cmdd.Parameters.AddWithValue("@IdMedicament", grade.IdMedicament);
+        var drr = cmdd.ExecuteReader();
+        while (drr.Read())
+        { 
+            var medicament = new Medicament()
+            { 
+                IdMedicament = (int)drr["IdMedicament"], 
+                Description = (string)drr["Description"], 
+                Name = (string)drr["Name"],
+                Type = (string)drr["Type"]
+            };
+            results.Add(medicament);
+        }
+        return results;
+    }
+    
+    private Doctor getDoctorById(SqlConnection con, int id)
+    {
+        String query = "SELECT * FROM Doctor WHERE IdDoctor = @IdDoctor";
+        var cmd = new SqlCommand();
+        cmd.Connection = con;
+        cmd.CommandText = query;
+        cmd.Parameters.AddWithValue("@IdDoctor", id);
+        var dr = cmd.ExecuteReader();
+        if (!dr.Read()) return null;
+        var doctor = new Doctor()
+        {
+            IdDoctor = (int)dr["IdPatient"],
+            FirstName = (string)dr["FirstName"],
+            LastName = (string)dr["LastName"],
+            Email = (string)dr["Email"],
+        };
+        return doctor;
     }
 }
